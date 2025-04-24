@@ -13,8 +13,6 @@ Krypton the daemon for Kyro that runs on your nodes that allows for server manag
 - **Role-based permissions** and access control
 - **Server management** (create, update, power actions, etc.)
 - **Project, node, and unit management**
-- **REST API** (Express)
-- **Easy development and production modes**
 
 ---
 

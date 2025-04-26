@@ -4,7 +4,6 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { randomBytes } from "crypto";
 
-// Color formatting functions
 const colors = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
@@ -17,8 +16,8 @@ const colors = {
 };
 
 const appName = import.meta.env.VITE_APP_NAME ?? "Kyro";
+const appVersion = import.meta.env.VITE_APP_VERSION ?? "0.0.0"
 
-// Helper functions for formatted output
 const log = {
   title: (text: string) =>
     console.log(`\n${colors.bold}${colors.blue}${text}${colors.reset}`),
@@ -40,7 +39,6 @@ async function generateConfig() {
   });
 
   try {
-    // Helper function to get input with default value
     const getInput = async (question: string, defaultValue: string) => {
       const answer = await rl.question(
         `${colors.cyan}? ${colors.reset}${question} ${colors.dim}[${defaultValue}]${colors.reset}: `,
@@ -51,13 +49,11 @@ async function generateConfig() {
     log.title("Krypton Configuration Wizard");
     log.info("Let's set up your Krypton instance together.\n");
 
-    // Get panel URL
     const appUrl = await getInput(
       "What's your panel's URL",
-      "https://panel.example.io",
+      "https://panel.kyro.lol",
     );
 
-    // Confirm node setup
     const nodeConfirmed = await getInput(
       "Please confirm that you've made a node that points towards this instance of Krypton",
       "y",
@@ -67,13 +63,11 @@ async function generateConfig() {
       return false;
     }
 
-    // Get port
     const bindPort = parseInt(
       await getInput("What port did you choose?", "8080"),
     );
 
-    // Get connection key
-    log.section("Security Configuration");
+    log.section("Security Configuration. If you are unsure what this means please do not continue with the configuration and contact me, ill help you.");
     const apiKey = await rl.question(
       `${colors.cyan}? ${colors.reset}What's the connection key? ${colors.dim}(Node -> Configure)${colors.reset}: `,
     );
@@ -82,7 +76,6 @@ async function generateConfig() {
       return false;
     }
 
-    // Check for additional CORS origins
     const needsAdditionalCors = await getInput(
       "Will this instance be accessed from anywhere else other than your panel?",
       "n",
@@ -125,22 +118,19 @@ async function generateConfig() {
 #
 # For support and documentation, visit the ${appName} GitHub repository.
 #
-# Generated on: ${new Date().toISOString()} for Krypton version 1.x
+# Generated on: ${new Date().toISOString()} with version ${appVersion}
 #
 `;
 
-    // Display config
     log.section("\nConfiguration Preview");
     console.log(warningHeader + yaml.dump(config));
 
-    // Confirm configuration
     const confirmed = await getInput("Are we all set?", "y");
     if (confirmed.toLowerCase() !== "y") {
       log.warning("Starting over...");
       return false;
     }
 
-    // Write config file
     await fs.writeFile(
       path.join(process.cwd(), "config.yml"),
       warningHeader + yaml.dump(config),
@@ -160,7 +150,6 @@ async function generateConfig() {
   }
 }
 
-// Start the configuration process
 generateConfig().catch((error) => {
   log.error("Error during configuration:");
   console.error(error);

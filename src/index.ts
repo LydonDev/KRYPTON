@@ -1,5 +1,5 @@
 /*
- * Krypton Daemon version v1.0.0-dev 
+ * Krypton Daemon version v1.0.0-dev
  * (c) 2025 - 2025 Lydon
  */
 
@@ -50,17 +50,17 @@ export interface ServerVariable {
 
 export enum ServerState {
   Creating = "creating",
-  Installing = "installing", 
-  InstallFailed = "install_failed", 
-  Installed = "installed", 
+  Installing = "installing",
+  InstallFailed = "install_failed",
+  Installed = "installed",
   Starting = "starting",
   Running = "running",
-  Updating = "updating", 
-  UpdateFailed = "update_failed", 
+  Updating = "updating",
+  UpdateFailed = "update_failed",
   Stopping = "stopping",
   Stopped = "stopped",
   Errored = "errored",
-  Deleting = "deleting", 
+  Deleting = "deleting",
 }
 
 export interface ServerConfig {

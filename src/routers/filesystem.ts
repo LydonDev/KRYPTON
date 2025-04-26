@@ -1,6 +1,4 @@
 // @ts-nocheck
-// Daemon: src/routers/filesystem.ts
-
 import express, { Router } from "express";
 import expressWs from "express-ws";
 import { promises as fs, createReadStream, createWriteStream } from "fs";
@@ -56,7 +54,6 @@ interface CargoFile {
   };
 }
 
-// Extend the Request interface to include the server property
 interface AuthenticatedRequest extends Request {
   server?: {
     id: string;
@@ -74,7 +71,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     ws: wsRouter.ws.bind(wsRouter),
   });
 
-  // Validate auth token against panel
   async function validateToken(
     serverId: string,
     token: string,
@@ -84,7 +80,7 @@ export function configureFilesystemRouter(appState: AppState): Router {
         `${appState.config.appUrl}/api/servers/${serverId}/validate/${token}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 5000, // 5 second timeout
+          timeout: 5000,
         },
       );
       return response.data;
@@ -94,7 +90,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   }
 
-  // Auth middleware
   async function authMiddleware(
     req: AuthenticatedRequest,
     res: express.Response,
@@ -120,19 +115,15 @@ export function configureFilesystemRouter(appState: AppState): Router {
     next();
   }
 
-  // Sanitize and validate paths
   function getValidatedPath(
     serverId: string,
     requestPath: string,
   ): string | null {
     try {
-      // Get the base server path
       const serverPath = path.join(appState.config.volumesDirectory, serverId);
 
-      // Normalize and join the requested path
       const fullPath = path.normalize(path.join(serverPath, requestPath));
 
-      // Ensure the path stays within the server directory
       if (!fullPath.startsWith(serverPath)) {
         return null;
       }
@@ -143,7 +134,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   }
 
-  // Fetch cargo files from the panel
   async function getCargoFiles(serverId: string): Promise<CargoFile[]> {
     try {
       const response = await axios.get(
@@ -157,7 +147,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   }
 
-  // Check if a file is a cargo file and get its properties
   async function getCargoFileProperties(
     serverId: string,
     filePath: string,
@@ -184,7 +173,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   }
 
-  // Enhanced file stat that includes cargo properties
   async function getEnhancedStats(
     fullPath: string,
     dirent: any,
@@ -193,11 +181,9 @@ export function configureFilesystemRouter(appState: AppState): Router {
     const filePath = path.join(fullPath, dirent.name);
     const stats = await fs.stat(filePath);
 
-    // Get relative path from server root
     const serverPath = path.join(appState.config.volumesDirectory, serverId);
     const relativePath = path.relative(serverPath, filePath);
 
-    // Check cargo properties
     const { isCargoFile, properties } = await getCargoFileProperties(
       serverId,
       relativePath,
@@ -222,7 +208,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     };
   }
 
-  // List directory contents (with cargo properties)
   router.get(
     "/:serverId/list/*?",
     authMiddleware,
@@ -247,7 +232,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
           }),
         );
 
-        // Filter out hidden files if specified
         const showHidden = req.query.showHidden === "true";
         const filteredFiles = showHidden
           ? files
@@ -261,7 +245,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     },
   );
 
-  // Get file contents (respecting readonly property)
   router.get("/:serverId/contents/*", authMiddleware, async (req, res) => {
     try {
       const filePath = req.params[0];
@@ -276,7 +259,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
         return res.status(400).json({ error: "Path is not a file" });
       }
 
-      // Don't try to read very large files
       if (stats.size > 100 * 1024 * 1024) {
         // 100MB limit
         return res.status(413).json({ error: "File too large to read" });
@@ -289,7 +271,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
       );
       res.setHeader("Content-Length", stats.size);
 
-      // Add cargo info in headers
       const { isCargoFile, properties } = await getCargoFileProperties(
         req.server.internalId,
         filePath,
@@ -310,7 +291,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   });
 
-  // Write file contents (respecting readonly property)
   router.post(
     "/:serverId/write/*",
     authMiddleware,
@@ -324,7 +304,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
           return res.status(400).json({ error: "Invalid path" });
         }
 
-        // Check if this is a readonly cargo file
         const { isCargoFile, properties } = await getCargoFileProperties(
           req.server.internalId,
           filePath,
@@ -337,7 +316,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
           });
         }
 
-        // Create directory if it doesn't exist
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
 
         await fs.writeFile(fullPath, req.body);
@@ -349,7 +327,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     },
   );
 
-  // Delete file or directory (respecting noDelete property)
   router.delete("/:serverId/delete/*", authMiddleware, async (req, res) => {
     try {
       const targetPath = req.params[0];
@@ -359,7 +336,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
         return res.status(400).json({ error: "Invalid path" });
       }
 
-      // Check if this is a protected cargo file
       const { isCargoFile, properties } = await getCargoFileProperties(
         req.server.internalId,
         targetPath,
@@ -375,7 +351,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
       const stats = await fs.stat(fullPath);
 
       if (stats.isDirectory()) {
-        // For directories, check if they contain protected cargo files
         const cargoFiles = await getCargoFiles(req.server.internalId);
         const dirPrefix = targetPath + (targetPath.endsWith("/") ? "" : "/");
 
@@ -405,7 +380,6 @@ export function configureFilesystemRouter(appState: AppState): Router {
     }
   });
 
-  // Create directory
   router.post(
     "/:serverId/create-directory/*",
     authMiddleware,

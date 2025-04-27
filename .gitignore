@@ -8,3 +8,4 @@ config.yml
 package-lock.json
 .DS_Store
 .env
+config.json

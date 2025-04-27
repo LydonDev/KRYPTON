@@ -22,8 +22,6 @@ import { configureStateRouter } from "./routers/state";
 import { configureWebSocketRouter } from "./routers/websocket";
 import { configureFilesystemRouter } from "./routers/filesystem";
 
-export const VERSION = "1.0.0";
-
 // Types
 export interface Config {
   apiKey: string;

@@ -1,6 +1,7 @@
 // src/routes/state.ts
 import { Router } from "express";
-import { AppState, SystemState, ContainerStats, VERSION } from "../index";
+import { AppState, SystemState, ContainerStats } from "../index";
+import { KYRO_VERSION } from "../config";
 
 let cachedSystemState: SystemState | null = null;
 let cacheTimestamp: number | null = null;
@@ -40,7 +41,7 @@ export function configureStateRouter(appState: AppState): Router {
       ]);
 
       const systemState: SystemState = {
-        version: VERSION,
+        version: KYRO_VERSION,
         kernel: osInfo.kernel || "unknown",
         osVersion: osInfo.distro || "unknown",
         hostname: osInfo.hostname || "unknown",

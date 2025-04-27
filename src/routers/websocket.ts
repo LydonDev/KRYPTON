@@ -6,8 +6,7 @@ import Docker, { Container } from "dockerode";
 import { Duplex } from "stream";
 import chalk from "chalk";
 import crypto from "crypto";
-
-const appName = import.meta.env.VITE_APP_NAME ?? "Kyro";
+import { KYRO_VERSION } from "../config";
 
 enum LogType {
   INFO = "info",
@@ -273,7 +272,7 @@ export class WebSocketManager {
           for (const line of lines) {
             if (line.trim()) {
               // Sanitize and clean the log line
-              const cleaned = line.replace("pterodactyl", appName);
+              const cleaned = line.replace("pterodactyl", KYRO_VERSION);
 
               if (cleaned && this.validatePayloadSize(cleaned)) {
                 this.addLogToBuffer(session.internalId, cleaned);
